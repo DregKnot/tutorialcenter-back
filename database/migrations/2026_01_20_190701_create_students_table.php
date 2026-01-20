@@ -50,9 +50,6 @@ return new class extends Migration
             // Additional information stored as JSON (for guardian contacts)
             $table->json('guardians')->nullable();
             
-            // Soft delete timestamp (for logical deletion)
-            $table->datetime('deleted_at')->nullable();
-            
             // Record timestamps (created_at and updated_at)
             $table->datetime('created_at');
             $table->datetime('updated_at');
