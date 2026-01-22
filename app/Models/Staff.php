@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Student extends Model
+class Staff extends Model
 {
-    use SoftDeletes, Notifiable, HasApiTokens;
+    use SoftDeletes;
+
+    protected $table = 'staffs';
 
     protected $fillable = [
+        'staff_id',
         'firstname',
         'surname',
         'email',
@@ -24,29 +25,15 @@ class Student extends Model
         'tel_verified_at',
         'location',
         'address',
-        'department',
-        'guardians',
+        'role',
+        'inducted_by',
     ];
 
-    protected $hidden = [
-        'password'
-    ];
+    protected $hidden = ['password'];
 
     protected $casts = [
-        // 'password' => 'hashed',
-        'guardians' => 'array',
         'date_of_birth' => 'date',
         'email_verified_at' => 'datetime',
         'tel_verified_at' => 'datetime',
     ];
-
-    public function courseEnrollments()
-    {
-        return $this->hasMany(CoursesEnrollment::class, 'student');
-    }
-
-    public function subjectEnrollments()
-    {
-        return $this->hasMany(SubjectsEnrollment::class, 'student');
-    }
 }
