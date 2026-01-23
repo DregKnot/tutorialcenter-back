@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\Student;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\EmailVerification;
@@ -91,19 +92,37 @@ class StudentController extends Controller
     /**
      * Summary of sendEmailVerification
      **/
-    protected function sendEmailVerification(Student $student)
+    protected function sendEmailVerification(Model $user): void
     {
+        // Remove existing verification records
+        EmailVerification::where('verifiable_type', get_class($user))
+            ->where('verifiable_id', $user->id)
+            ->delete();
+
         $token = Str::uuid();
 
-        // Store token (recommended in a table, simplified for now)
-        cache()->put(
-            'email_verification_' . $token,
-            $student->id,
-            now()->addMinutes(30)
-        );
+        EmailVerification::create([
+            'verifiable_type' => get_class($user),
+            'verifiable_id' => $user->id,
+            'token' => $token,
+            'expires_at' => now()->addMinutes(30),
+        ]);
 
-        $student->notify(new StudentEmailVerification($token));
+        $user->notify(new StudentEmailVerification($token));
     }
+    // protected function sendEmailVerification(Student $student)
+    // {
+    //     $token = Str::uuid();
+
+    //     // Store token (recommended in a table, simplified for now)
+    //     cache()->put(
+    //         'email_verification_' . $token,
+    //         $student->id,
+    //         now()->addMinutes(30)
+    //     );
+
+    //     $student->notify(new StudentEmailVerification($token));
+    // }
 
     /**
      * Summary of verifyEmail
@@ -125,9 +144,15 @@ class StudentController extends Controller
                 ], 400);
             }
 
-            $student = $record->student;
+            $user = $record->verifiable;
 
-            Student::where('id', $student)->update([
+            if (!$user) {
+                return response()->json([
+                    'message' => 'User not found for this verification token.',
+                ], 404);
+            }
+
+            $user->update([
                 'email_verified_at' => now(),
             ]);
 
@@ -142,32 +167,54 @@ class StudentController extends Controller
                 'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
-
     }
+    // public function verifyEmail(Request $request)
+    // {
+    //     try {
+    //         $request->validate([
+    //             'token' => 'required|string',
+    //         ]);
+
+    //         $record = EmailVerification::where('token', $request->token)
+    //             ->where('expires_at', '>', now())
+    //             ->first();
+
+    //         if (!$record) {
+    //             return response()->json([
+    //                 'message' => 'Invalid or expired verification link.',
+    //             ], 400);
+    //         }
+
+    //         $student = $record->student;
+
+    //         Student::where('id', $student)->update([
+    //             'email_verified_at' => now(),
+    //         ]);
+
+    //         $record->delete();
+
+    //         return response()->json([
+    //             'message' => 'Email verified successfully.',
+    //         ]);
+    //     } catch (\Throwable $e) {
+    //         return response()->json([
+    //             'message' => 'Email verification failed.',
+    //             'error' => config('app.debug') ? $e->getMessage() : null,
+    //         ], 500);
+    //     }
+
+    // }
 
     /**
      * Summary of resendEmailVerification
-    **/
+     **/
     public function resendEmailVerification(Request $request)
     {
-        try {
-            $request->validate([
-                'email' => 'required|email|exists:students,email',
-            ]);
-        } catch (\Throwable $e) {
-            return response()->json([
-                'message' => 'Validation failed.',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-            ], 422);
-        }
+        $request->validate([
+            'email' => 'required|email|exists:students,email',
+        ]);
 
         $student = Student::where('email', $request->email)->first();
-
-        if (!$student) {
-            return response()->json([
-                'message' => 'Student not found.',
-            ], 404);
-        }
 
         if ($student->email_verified_at) {
             return response()->json([
@@ -178,10 +225,10 @@ class StudentController extends Controller
         DB::beginTransaction();
 
         try {
-            // 1. Remove existing verification tokens
-            EmailVerification::where('student', $student->id)->delete();
+            EmailVerification::where('verifiable_type', Student::class)
+                ->where('verifiable_id', $student->id)
+                ->delete();
 
-            // 2. Send new verification email (must throw on failure)
             app(EmailVerificationService::class)->send($student);
 
             DB::commit();
@@ -189,7 +236,6 @@ class StudentController extends Controller
             return response()->json([
                 'message' => 'Verification email resent successfully.',
             ]);
-
         } catch (\Throwable $e) {
             DB::rollBack();
 
@@ -199,6 +245,57 @@ class StudentController extends Controller
             ], 500);
         }
     }
+    // public function resendEmailVerification(Request $request)
+    // {
+    //     try {
+    //         $request->validate([
+    //             'email' => 'required|email|exists:students,email',
+    //         ]);
+    //     } catch (\Throwable $e) {
+    //         return response()->json([
+    //             'message' => 'Validation failed.',
+    //             'error' => config('app.debug') ? $e->getMessage() : null,
+    //         ], 422);
+    //     }
+
+    //     $student = Student::where('email', $request->email)->first();
+
+    //     if (!$student) {
+    //         return response()->json([
+    //             'message' => 'Student not found.',
+    //         ], 404);
+    //     }
+
+    //     if ($student->email_verified_at) {
+    //         return response()->json([
+    //             'message' => 'Email is already verified.',
+    //         ], 400);
+    //     }
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         // 1. Remove existing verification tokens
+    //         EmailVerification::where('student', $student->id)->delete();
+
+    //         // 2. Send new verification email (must throw on failure)
+    //         app(EmailVerificationService::class)->send($student);
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'message' => 'Verification email resent successfully.',
+    //         ]);
+
+    //     } catch (\Throwable $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'message' => 'Failed to resend verification email.',
+    //             'error' => config('app.debug') ? $e->getMessage() : null,
+    //         ], 500);
+    //     }
+    // }
 
 
     /**

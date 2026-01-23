@@ -4,26 +4,56 @@ namespace App\Services;
 
 use Illuminate\Support\Str;
 use App\Models\EmailVerification;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Model;
 use App\Notifications\StudentEmailVerification;
 
 class EmailVerificationService
 {
-    public function send($student): bool
+    public function send(Model $user): void
     {
-        return DB::transaction(function () use ($student) {
+        // Remove existing tokens
+        EmailVerification::where('verifiable_type', get_class($user))
+            ->where('verifiable_id', $user->id)
+            ->delete();
 
-            $token = Str::uuid();
+        $token = Str::uuid();
 
-            EmailVerification::create([
-                'student' => $student->id,
-                'token' => $token,
-                'expires_at' => now()->addMinutes(30),
-            ]);
+        EmailVerification::create([
+            'verifiable_type' => get_class($user),
+            'verifiable_id' => $user->id,
+            'token' => $token,
+            'expires_at' => now()->addMinutes(30),
+        ]);
 
-            $student->notify(new StudentEmailVerification($token));
-
-            return true;
-        });
+        $user->notify(new StudentEmailVerification($token));
     }
 }
+
+
+// namespace App\Services;
+
+// use Illuminate\Support\Str;
+// use App\Models\EmailVerification;
+// use Illuminate\Support\Facades\DB;
+// use App\Notifications\StudentEmailVerification;
+
+// class EmailVerificationService
+// {
+//     public function send($student): bool
+//     {
+//         return DB::transaction(function () use ($student) {
+
+//             $token = Str::uuid();
+
+//             EmailVerification::create([
+//                 'student' => $student->id,
+//                 'token' => $token,
+//                 'expires_at' => now()->addMinutes(30),
+//             ]);
+
+//             $student->notify(new StudentEmailVerification($token));
+
+//             return true;
+//         });
+//     }
+// }
