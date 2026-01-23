@@ -110,19 +110,6 @@ class StudentController extends Controller
 
         $user->notify(new StudentEmailVerification($token));
     }
-    // protected function sendEmailVerification(Student $student)
-    // {
-    //     $token = Str::uuid();
-
-    //     // Store token (recommended in a table, simplified for now)
-    //     cache()->put(
-    //         'email_verification_' . $token,
-    //         $student->id,
-    //         now()->addMinutes(30)
-    //     );
-
-    //     $student->notify(new StudentEmailVerification($token));
-    // }
 
     /**
      * Summary of verifyEmail
@@ -168,42 +155,6 @@ class StudentController extends Controller
             ], 500);
         }
     }
-    // public function verifyEmail(Request $request)
-    // {
-    //     try {
-    //         $request->validate([
-    //             'token' => 'required|string',
-    //         ]);
-
-    //         $record = EmailVerification::where('token', $request->token)
-    //             ->where('expires_at', '>', now())
-    //             ->first();
-
-    //         if (!$record) {
-    //             return response()->json([
-    //                 'message' => 'Invalid or expired verification link.',
-    //             ], 400);
-    //         }
-
-    //         $student = $record->student;
-
-    //         Student::where('id', $student)->update([
-    //             'email_verified_at' => now(),
-    //         ]);
-
-    //         $record->delete();
-
-    //         return response()->json([
-    //             'message' => 'Email verified successfully.',
-    //         ]);
-    //     } catch (\Throwable $e) {
-    //         return response()->json([
-    //             'message' => 'Email verification failed.',
-    //             'error' => config('app.debug') ? $e->getMessage() : null,
-    //         ], 500);
-    //     }
-
-    // }
 
     /**
      * Summary of resendEmailVerification
@@ -245,58 +196,6 @@ class StudentController extends Controller
             ], 500);
         }
     }
-    // public function resendEmailVerification(Request $request)
-    // {
-    //     try {
-    //         $request->validate([
-    //             'email' => 'required|email|exists:students,email',
-    //         ]);
-    //     } catch (\Throwable $e) {
-    //         return response()->json([
-    //             'message' => 'Validation failed.',
-    //             'error' => config('app.debug') ? $e->getMessage() : null,
-    //         ], 422);
-    //     }
-
-    //     $student = Student::where('email', $request->email)->first();
-
-    //     if (!$student) {
-    //         return response()->json([
-    //             'message' => 'Student not found.',
-    //         ], 404);
-    //     }
-
-    //     if ($student->email_verified_at) {
-    //         return response()->json([
-    //             'message' => 'Email is already verified.',
-    //         ], 400);
-    //     }
-
-    //     DB::beginTransaction();
-
-    //     try {
-    //         // 1. Remove existing verification tokens
-    //         EmailVerification::where('student', $student->id)->delete();
-
-    //         // 2. Send new verification email (must throw on failure)
-    //         app(EmailVerificationService::class)->send($student);
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'message' => 'Verification email resent successfully.',
-    //         ]);
-
-    //     } catch (\Throwable $e) {
-    //         DB::rollBack();
-
-    //         return response()->json([
-    //             'message' => 'Failed to resend verification email.',
-    //             'error' => config('app.debug') ? $e->getMessage() : null,
-    //         ], 500);
-    //     }
-    // }
-
 
     /**
      * Summary of sendPhoneOtp
