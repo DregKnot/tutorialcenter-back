@@ -36,4 +36,10 @@ class Staff extends Model
         'email_verified_at' => 'datetime',
         'tel_verified_at' => 'datetime',
     ];
+
+    public function emailVerification()
+    {
+        return $this->morphOne(EmailVerification::class, 'verifiable');
+    }
+
 }

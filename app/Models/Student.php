@@ -40,6 +40,12 @@ class Student extends Model
         'tel_verified_at' => 'datetime',
     ];
 
+    public function emailVerification()
+    {
+        return $this->morphOne(EmailVerification::class, 'verifiable');
+    }
+
+
     public function courseEnrollments()
     {
         return $this->hasMany(CoursesEnrollment::class, 'student');

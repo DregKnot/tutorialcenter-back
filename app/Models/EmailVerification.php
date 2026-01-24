@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class EmailVerification extends Model
 {
     protected $fillable = [
-        'student',
+        'verifiable_type',
+        'verifiable_id',
         'token',
         'expires_at',
     ];
@@ -15,4 +16,9 @@ class EmailVerification extends Model
     protected $casts = [
         'expires_at' => 'datetime',
     ];
+
+    public function verifiable()
+    {
+        return $this->morphTo();
+    }
 }
