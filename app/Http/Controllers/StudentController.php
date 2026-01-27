@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
 use Carbon\Carbon;
 use App\Models\Student;
 use Illuminate\Support\Str;
@@ -489,5 +490,14 @@ class StudentController extends Controller
                 'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
+    }
+
+    public function fetchCourses()
+    {
+        $courses = Course::where('status', 'active')->get();
+
+        return response()->json([
+            'courses' => $courses,
+        ]);
     }
 }

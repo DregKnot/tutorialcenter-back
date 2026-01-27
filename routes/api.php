@@ -87,4 +87,11 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'auth:staff', 'staff.role:ad
     Route::post('/courses/restore/{id}', [CourseController::class, 'restore']);
 });
 
+/*
+| Protected Student Routes
+*/
+Route::prefix('students')->middleware(['auth:sanctum', 'auth:student'])->group(function () {
+    Route::get('/courses', [StudentController::class, 'fetchCourses']);
+});
+
 
