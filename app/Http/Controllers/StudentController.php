@@ -162,21 +162,27 @@ class StudentController extends Controller
      **/
     public function resendEmailVerification(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email|exists:students,email',
-        ]);
-
-        $student = Student::where('email', $request->email)->first();
-
-        if ($student->email_verified_at) {
-            return response()->json([
-                'message' => 'Email is already verified.',
-            ], 400);
-        }
-
         DB::beginTransaction();
-
         try {
+            $request->validate([
+                'email' => 'required|email|exists:students,email',
+            ]);
+
+            $student = Student::where('email', $request->email)->first();
+
+            if (!$student) {
+                return response()->json([
+                    'message' => 'Student not found.',
+                ], 404);
+            }
+
+            if ($student->email_verified_at) {
+                return response()->json([
+                    'message' => 'Email is already verified.',
+                ], 400);
+            }
+
+
             EmailVerification::where('verifiable_type', Student::class)
                 ->where('verifiable_id', $student->id)
                 ->delete();
@@ -402,9 +408,9 @@ class StudentController extends Controller
 
         try {
             // 3. Find the student by email or tel
-            if($request->email) {
+            if ($request->email) {
                 $student = Student::where('email', $request->email)->first();
-            } elseif($request->tel) {
+            } elseif ($request->tel) {
                 $student = Student::where('tel', $request->tel)->first();
             } else {
                 return response()->json([
@@ -429,11 +435,11 @@ class StudentController extends Controller
             }
 
             $data = $validator->validated();
-            
+
             /**
              * 6. Enforce uniqueness on update
              */
-            
+
             if (isset($data['email']) && $data['email'] !== $student->email) {
                 if (Student::where('email', $data['email'])->exists()) {
                     DB::rollBack();

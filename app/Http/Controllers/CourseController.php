@@ -246,7 +246,7 @@ class CourseController extends Controller
             $student = Student::find($request->student_id);
 
             // 3. Ensure student is verified
-            if (is_null($student->email_verified_at) || is_null($student->tel_verified_at)) {
+            if (is_null($student->email_verified_at) && is_null($student->tel_verified_at)) {
                 return response()->json([
                     'message' => 'Please verify your email or phone number before enrolling.',
                 ], 403);
@@ -286,11 +286,11 @@ class CourseController extends Controller
 
             $cost = $course->price; // monthly base price
             if ($request->billing_cycle === 'quarterly') {
-                $cost = ($cost * 3) / 0.95; // 5% discount
+                $cost = ($cost * 3) - (($cost * 3) * 0.05); // 5% discount
             } elseif ($request->billing_cycle === 'semi-annual') {
-                $cost = ($cost * 6) / 0.95; // 5% discount
+                $cost = ($cost * 6) - (($cost * 6) * 0.05); // 5% discount
             } elseif ($request->billing_cycle === 'annual') {
-                $cost = ($cost * 12) / 0.95; // 5% discount
+                $cost = ($cost * 12) - (($cost * 12) * 0.05); // 5% discount
             }
 
             // 7. Create enrollment
