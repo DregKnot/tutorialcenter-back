@@ -3,6 +3,7 @@
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\SubjectController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -47,9 +48,9 @@ Route::prefix('students')->group(function () {
 | Student Protected Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('students')->middleware(['auth:sanctum', 'auth:student'])->group(function () {
-    // Route::get('/courses', [StudentController::class, 'fetchCourses']);
-});
+// Route::prefix('students')->middleware(['auth:sanctum', 'auth:student'])->group(function () {
+//     // Route::get('/courses', [StudentController::class, 'fetchCourses']);
+// });
 
 /*
 |--------------------------------------------------------------------------
@@ -105,6 +106,13 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'auth:staff', 'staff.role:ad
     Route::put('/courses/update/{id}', [CourseController::class, 'update']);
     Route::delete('/courses/destroy/{id}', [CourseController::class, 'destroy']);
     Route::post('/courses/restore/{id}', [CourseController::class, 'restore']);
+
+    // Subject Management
+    Route::get('/subjects', [SubjectController::class, 'index']); // View all subjects (including inactive)
+    Route::post('/subjects', [SubjectController::class, 'store']); // Create new subject
+    Route::put('/subjects/update/{id}', [SubjectController::class, 'update']); // Update subject
+    Route::delete('/subjects/destroy/{id}', [SubjectController::class, 'destroy']); // Soft delete subject
+    Route::post('/subjects/restore/{id}', [SubjectController::class, 'restore']); // Restore soft-deleted subject
 });
 
 
