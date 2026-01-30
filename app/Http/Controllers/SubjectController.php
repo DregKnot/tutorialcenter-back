@@ -28,20 +28,20 @@ class SubjectController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'        => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'description' => 'required|string',
-            'banner'      => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'banner' => 'required|image|mimes:jpg,jpeg,png|max:2048',
 
-            'courses'     => 'required|array|min:1',
-            'courses.*'   => 'exists:courses,id',
+            'courses' => 'required|array|min:1',
+            'courses.*' => 'exists:courses,id',
 
-            'departments'   => 'required|array|min:1',
+            'departments' => 'required|array|min:1',
             'departments.*' => 'string',
 
-            'assignees'   => 'required|array|min:1',
+            'assignees' => 'required|array|min:1',
             'assignees.*' => 'exists:staffs,id',
 
-            'status'      => 'required|in:active,inactive',
+            'status' => 'required|in:active,inactive',
         ]);
 
         if ($validator->fails()) {
@@ -58,13 +58,13 @@ class SubjectController extends Controller
                 ->store('subject_banners', 'public');
 
             $subject = Subject::create([
-                'name'        => $request->name,
+                'name' => $request->name,
                 'description' => $request->description,
-                'banner'      => $bannerPath,
-                'courses'     => $request->courses,
+                'banner' => $bannerPath,
+                'courses' => $request->courses,
                 'departments' => $request->departments,
-                'assignees'   => $request->assignees,
-                'status'      => $request->status,
+                'assignees' => $request->assignees,
+                'status' => $request->status,
             ]);
 
             DB::commit();
@@ -79,7 +79,7 @@ class SubjectController extends Controller
 
             return response()->json([
                 'message' => 'Failed to create subject.',
-                'error'   => config('app.debug') ? $e->getMessage() : null,
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
@@ -98,20 +98,20 @@ class SubjectController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name'        => 'nullable|string|max:255',
+            'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'banner'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'banner' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
 
-            'courses'     => 'nullable|array|min:1',
-            'courses.*'   => 'exists:courses,id',
+            'courses' => 'nullable|array|min:1',
+            'courses.*' => 'exists:courses,id',
 
-            'departments'   => 'nullable|array|min:1',
+            'departments' => 'nullable|array|min:1',
             'departments.*' => 'string',
 
-            'assignees'   => 'nullable|array|min:1',
+            'assignees' => 'nullable|array|min:1',
             'assignees.*' => 'exists:staffs,id',
 
-            'status'      => 'nullable|in:active,inactive',
+            'status' => 'nullable|in:active,inactive',
         ]);
 
         if ($validator->fails()) {
@@ -145,7 +145,7 @@ class SubjectController extends Controller
 
             return response()->json([
                 'message' => 'Failed to update subject.',
-                'error'   => config('app.debug') ? $e->getMessage() : null,
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
@@ -192,8 +192,8 @@ class SubjectController extends Controller
     }
 
     /*
-    * Public Method: List all active subjects
-    */
+     * Public Method: List all active subjects
+     */
     public function index()
     {
         $subjects = Subject::where('status', 'active')->get();
@@ -201,5 +201,54 @@ class SubjectController extends Controller
         return response()->json([
             'subjects' => $subjects,
         ]);
+    }
+
+    /*
+     * Public Method: List subjects by course
+     */
+    public function subjectsByCourse(int $courseId)
+    {
+        try {
+            $subjects = Subject::query()
+                ->where('status', 'active')
+                ->whereJsonContains('courses', $courseId)
+                ->get();
+
+            return response()->json([
+                'message' => 'Subjects fetched successfully.',
+                'subjects' => $subjects,
+            ], 200);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve subjects.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /*
+     * Public Method: List subjects by course and department
+     */
+    public function subjectsByCourseAndDepartment(int $courseId, string $department)
+    {
+        try {
+            $subjects = Subject::query()
+                ->where('status', 'active')
+                ->whereJsonContains('courses', $courseId)
+                ->whereJsonContains('departments', $department)
+                ->get();
+
+            return response()->json([
+                'message' => 'Subjects fetched successfully.',
+                'subjects' => $subjects,
+            ], 200);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve subjects.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
     }
 }

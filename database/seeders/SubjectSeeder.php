@@ -22,28 +22,28 @@ class SubjectSeeder extends Seeder
                 'description' => 'Core language subject focusing on comprehension, grammar, essay writing, and oral English.',
                 'banner' => 'subjects/use-of-english.png',
                 'courses' => [1], // JAMB, WAEC, NECO, GCE
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
             [
                 'name' => 'Mathematics',
                 'description' => 'Study of arithmetic, algebra, geometry, trigonometry, and statistics.',
                 'banner' => 'subjects/mathematics.png',
                 'courses' => [1],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
             [
                 'name' => 'Computer Studies',
                 'description' => 'Introduction to computers, ICT tools, and basic programming concepts.',
                 'banner' => 'subjects/computer-studies.png',
                 'courses' => [1],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
             [
                 'name' => 'Literature in English',
                 'description' => 'Study of prose, poetry, and drama with literary analysis.',
                 'banner' => 'subjects/literature.png',
                 'courses' => [1],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
             /*
             |--------------------------------------------------------------------------
@@ -235,7 +235,7 @@ class SubjectSeeder extends Seeder
                 'description' => 'Citizenship education, civic duties, and national values.',
                 'banner' => 'subjects/civic-education.png',
                 'courses' => [1],
-                'departments' => ['commercial', 'general'],
+                'departments' => ['commercial'],
             ],
             [
                 'name' => 'Data Processing',
@@ -279,21 +279,21 @@ class SubjectSeeder extends Seeder
                 'description' => 'Core language subject covering grammar, comprehension, essay writing, and oral English.',
                 'banner' => 'subjects/english-language.png',
                 'courses' => [2],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
             [
                 'name' => 'General Mathematics',
                 'description' => 'Covers arithmetic, algebra, geometry, trigonometry, and basic statistics.',
                 'banner' => 'subjects/general-mathematics.png',
                 'courses' => [2],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
             [
                 'name' => 'Citizenship & Heritage Studies',
                 'description' => 'Focuses on civic responsibility, national values, and Nigerian heritage.',
                 'banner' => 'subjects/citizenship-heritage.png',
                 'courses' => [2],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
 
             /*
@@ -550,21 +550,21 @@ class SubjectSeeder extends Seeder
                 'description' => 'Core language subject covering grammar, comprehension, essay writing, and oral English.',
                 'banner' => 'subjects/english-language.png',
                 'courses' => [3],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
             [
                 'name' => 'General Mathematics',
                 'description' => 'Covers arithmetic, algebra, geometry, trigonometry, and basic statistics.',
                 'banner' => 'subjects/general-mathematics.png',
                 'courses' => [3],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
             [
                 'name' => 'Citizenship & Heritage Studies',
                 'description' => 'Focuses on civic responsibility, national values, and Nigerian heritage.',
                 'banner' => 'subjects/citizenship-heritage.png',
                 'courses' => [3],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
 
             /*
@@ -820,21 +820,21 @@ class SubjectSeeder extends Seeder
                 'description' => 'Core language subject covering grammar, comprehension, essay writing, and oral English.',
                 'banner' => 'subjects/english-language.png',
                 'courses' => [4],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
             [
                 'name' => 'General Mathematics',
                 'description' => 'Covers arithmetic, algebra, geometry, trigonometry, and basic statistics.',
                 'banner' => 'subjects/general-mathematics.png',
                 'courses' => [4],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
             [
                 'name' => 'Citizenship & Heritage Studies',
                 'description' => 'Focuses on civic responsibility, national values, and Nigerian heritage.',
                 'banner' => 'subjects/citizenship-heritage.png',
                 'courses' => [4],
-                'departments' => ['general'],
+                'departments' => ['science', 'art', 'commercial', 'vocational'],
             ],
 
             /*
@@ -1081,7 +1081,7 @@ class SubjectSeeder extends Seeder
 
         foreach ($subjects as $subject) {
             Subject::updateOrCreate(
-                ['name' => $subject['name']],
+                ['courses' => $subject['courses'], 'departments' => $subject['departments'], 'name' => $subject['name']],
                 [
                     'name' => $subject['name'],
                     'description' => $subject['description'],
