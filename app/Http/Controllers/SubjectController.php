@@ -13,7 +13,7 @@ class SubjectController extends Controller
     /**
      * Admin: View all subjects (including inactive)
      */
-    public function index()
+    public function allSubjects()
     {
         $subjects = Subject::latest()->get();
 
@@ -188,6 +188,18 @@ class SubjectController extends Controller
         return response()->json([
             'message' => 'Subject restored successfully.',
             'subject' => $subject,
+        ]);
+    }
+
+    /*
+    * Public Method: List all active subjects
+    */
+    public function index()
+    {
+        $subjects = Subject::where('status', 'active')->get();
+
+        return response()->json([
+            'subjects' => $subjects,
         ]);
     }
 }

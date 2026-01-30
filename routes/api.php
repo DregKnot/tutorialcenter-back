@@ -14,7 +14,8 @@ use App\Http\Controllers\StudentController;
 | API Routes
 |--------------------------------------------------------------------------
 */
-Route::get('/courses', [CourseController::class, 'index']);
+Route::get('/courses', [CourseController::class, 'index']); // Public: List all active courses
+Route::get('/subjects', [SubjectController::class, 'index']); // Public: List all active subjects
 
 
 
@@ -108,7 +109,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'auth:staff', 'staff.role:ad
     Route::post('/courses/restore/{id}', [CourseController::class, 'restore']);
 
     // Subject Management
-    Route::get('/subjects', [SubjectController::class, 'index']); // View all subjects (including inactive)
+    Route::get('/subjects/all', [SubjectController::class, 'allSubjects']); // View all subjects (including inactive)
     Route::post('/subjects', [SubjectController::class, 'store']); // Create new subject
     Route::put('/subjects/update/{id}', [SubjectController::class, 'update']); // Update subject
     Route::delete('/subjects/destroy/{id}', [SubjectController::class, 'destroy']); // Soft delete subject
