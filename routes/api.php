@@ -34,7 +34,7 @@ Route::prefix('students')->group(function () {
     Route::post('/register', [StudentController::class, 'store']);
 
     // Email verification
-    Route::get('/verify-email', [StudentController::class, 'verifyEmail']);
+    Route::post('/verify-email', [StudentController::class, 'verifyEmail']);
     Route::post('/resend-email-verification', [StudentController::class, 'resendEmailVerification']);
 
     // Phone OTP verification

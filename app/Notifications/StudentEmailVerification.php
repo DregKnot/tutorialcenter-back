@@ -18,7 +18,7 @@ class StudentEmailVerification extends Notification
 
     public function toMail($notifiable)
     {
-        $verifyUrl = config('app.frontend_url') . '/register/student/email/verify?token=' . $this->token;
+        $verifyUrl = config('app.frontend_url') . "/register/student/email/verify?email=$notifiable->email&token=$this->token";
 
         return (new MailMessage)
             ->subject('Verify Your Email Address')
