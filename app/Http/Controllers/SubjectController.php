@@ -272,9 +272,9 @@ class SubjectController extends Controller
 
         try {
             // Verify subject enrollment exists already for that course and that student
-            $existingEnrollment = SubjectsEnrollment::where('course_enrollment_id', $request->course_enrollment_id)
-                ->where('subject_id', $request->subject_id)
-                ->where('student_id', $request->student_id)
+            $existingEnrollment = SubjectsEnrollment::where('course_enrollment', $request->course_enrollment_id)
+                ->where('subject', $request->subject_id)
+                ->where('student', $request->student_id)
                 ->first();  
             if ($existingEnrollment) {
                 return response()->json([
@@ -284,9 +284,9 @@ class SubjectController extends Controller
 
            // Create subject enrollment
            SubjectsEnrollment::create([
-                'course_enrollment_id' => $request->course_enrollment_id,
-                'subject_id' => $request->subject_id,
-                'student_id' => $request->student_id,
+                'course_enrollment' => $request->course_enrollment_id,
+                'subject' => $request->subject_id,
+                'student' => $request->student_id,
             ]);
 
             return response()->json([
