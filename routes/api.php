@@ -29,22 +29,14 @@ Route::post('payments', [PaymentController::class, 'store']); // Public: Process
 |--------------------------------------------------------------------------
 */
 Route::prefix('students')->group(function () {
-
-    // Registration
-    Route::post('/register', [StudentController::class, 'store']);
-    // Email verification
-    Route::post('/verify-email', [StudentController::class, 'verifyEmail']);
-    Route::post('/resend-email-verification', [StudentController::class, 'resendEmailVerification']);
-    // Phone OTP verification
-    Route::post('/verify-phone', [StudentController::class, 'verifyPhoneOtp']);
-    Route::post('/resend-phone-otp', [StudentController::class, 'resendPhoneOtp']);
-    // Biodata completion (NO AUTH REQUIRED, but verification enforced)
-    Route::post('/biodata', [StudentController::class, 'biodata']);
-    // Course enrollment
-    Route::post('/enroll-course', [CourseController::class, 'courseEnroll']);
-    // Login Method
-    Route::post('/login', [StudentController::class, 'login']);
-
+    Route::post('/register', [StudentController::class, 'store']); // Registration
+    Route::post('/verify-email', [StudentController::class, 'verifyEmail']); // Email verification
+    Route::post('/resend-email-verification', [StudentController::class, 'resendEmailVerification']); // Resend Email Verification
+    Route::post('/verify-phone', [StudentController::class, 'verifyPhoneOtp']); // Phone OTP verification
+    Route::post('/resend-phone-otp', [StudentController::class, 'resendPhoneOtp']); // Resend Phone Verification
+    Route::post('/biodata', [StudentController::class, 'biodata']); // Biodata completion (NO AUTH REQUIRED, but verification enforced)
+    Route::post('/enroll-course', [CourseController::class, 'courseEnroll']); // Course enrollment
+    Route::post('/login', [StudentController::class, 'login']); // Login Method
 });
 
 /*
@@ -52,9 +44,10 @@ Route::prefix('students')->group(function () {
 | Student Protected Routes
 |--------------------------------------------------------------------------
 */
-// Route::prefix('students')->middleware(['auth:sanctum', 'auth:student'])->group(function () {
-//     // Route::get('/courses', [StudentController::class, 'fetchCourses']);
-// });
+Route::prefix('students')->middleware(['auth:sanctum', 'auth:student'])->group(function () {
+    Route::get('/courses', [CourseController::class, 'getActiveCourses']); // Get Active Courses and Subject 
+    
+});
 
 /*
 |--------------------------------------------------------------------------

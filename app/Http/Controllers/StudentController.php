@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Course;
 use Carbon\Carbon;
 use App\Models\Student;
 use Illuminate\Support\Str;
@@ -511,10 +510,8 @@ class StudentController extends Controller
     }
 
     /**
-     * Login
-     */
-
-
+    * Login
+    **/
     public function login(Request $request)
     {
         // 1️⃣ Validate input
@@ -577,8 +574,8 @@ class StudentController extends Controller
     }
 
     /**
-     * logout.
-     */
+    * logout.
+    **/
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()?->delete();
@@ -587,5 +584,4 @@ class StudentController extends Controller
             'message' => 'Logged out successfully.',
         ]);
     }
-
 }

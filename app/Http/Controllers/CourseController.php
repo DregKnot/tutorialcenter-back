@@ -320,5 +320,78 @@ class CourseController extends Controller
         }
     }
 
+    /**
+     * Fetch active courses by merging enrollment + course table data
+     */
+    public function getActiveCourses(Request $request)
+    {
+        try {
+            $studentId = $request->user()->id;
+            $now = now();
+
+            // Step 1: Get active enrollments with successful payments
+            $enrollments = CoursesEnrollment::query()
+                ->where('student', $studentId)
+                ->where('start_date', '<=', $now)
+                ->where('end_date', '>=', $now)
+                ->whereHas('payments', function ($query) {
+                    $query->successful();
+                })
+                ->get();
+
+            // Step 2: Extract course IDs from enrollments
+            $courseIds = $enrollments->pluck('course')->unique()->values();
+
+            // Step 3: Fetch actual courses from courses table
+            $courses = Course::whereIn('id', $courseIds)->get()->keyBy('id');
+
+            // Step 4: Merge enrollment + course data
+            $mergedCourses = $enrollments->map(function ($enrollment) use ($courses) {
+
+                $course = $courses->get($enrollment->course);
+
+                // Fetch subjects under this enrollment
+                $subjects = DB::table('subjects_enrollments')
+                    ->join('subjects', 'subjects_enrollments.subject', '=', 'subjects.id')
+                    ->where('subjects_enrollments.course_enrollment', $enrollment->id)
+                    ->whereNull('subjects_enrollments.deleted_at')
+                    ->select(
+                        'subjects.id',
+                        'subjects.name',
+                        'subjects.description',
+                        'subjects.banner',
+                        'subjects_enrollments.progress'
+                    )
+                    ->get();
+
+                return [
+                    'enrollment_id' => $enrollment->id,
+                    'student' => $enrollment->student,
+                    'start_date' => $enrollment->start_date,
+                    'end_date' => $enrollment->end_date,
+                    'billing_cycle' => $enrollment->billing_cycle,
+
+                    // Course table data merged in
+                    'course' => $course,
+
+                    // Attached subjects
+                    'subjects' => $subjects,
+                ];
+            })->values();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Active paid courses retrieved successfully',
+                'courses' => $mergedCourses
+            ], 200);
+
+        } catch (\Exception $error) {
+            return response()->json([
+                'success' => false,
+                'message' => $error->getMessage(),
+                'errors' => $error,
+            ], 500);
+        }
+    }
 
 }

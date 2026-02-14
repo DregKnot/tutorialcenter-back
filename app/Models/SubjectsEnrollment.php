@@ -21,4 +21,15 @@ class SubjectsEnrollment extends Model
     protected $casts = [
         'progress' => 'float',
     ];
+
+    public function enrollment()
+    {
+        return $this->belongsTo(CoursesEnrollment::class, 'course_enrollment');
+    }
+
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class, 'subject');
+    }
+
 }

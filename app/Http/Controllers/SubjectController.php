@@ -256,8 +256,8 @@ class SubjectController extends Controller
     /*
      * Public Method: Subject enrollment
      */
-
-    public function subjectEnroll(Request $request) {
+    public function subjectEnroll(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'course_enrollment_id' => 'required|exists:courses_enrollments,id',
             'subject_id' => 'required|exists:subjects,id',
@@ -275,15 +275,15 @@ class SubjectController extends Controller
             $existingEnrollment = SubjectsEnrollment::where('course_enrollment', $request->course_enrollment_id)
                 ->where('subject', $request->subject_id)
                 ->where('student', $request->student_id)
-                ->first();  
+                ->first();
             if ($existingEnrollment) {
                 return response()->json([
                     'message' => 'Subject already enrolled for this course and student.',
                 ], 409);
             }
 
-           // Create subject enrollment
-           SubjectsEnrollment::create([
+            // Create subject enrollment
+            SubjectsEnrollment::create([
                 'course_enrollment' => $request->course_enrollment_id,
                 'subject' => $request->subject_id,
                 'student' => $request->student_id,
