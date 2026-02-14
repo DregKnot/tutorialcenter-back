@@ -46,7 +46,7 @@ Route::prefix('students')->group(function () {
 */
 Route::prefix('students')->middleware(['auth:sanctum', 'auth:student'])->group(function () {
     Route::get('/courses', [CourseController::class, 'getActiveCourses']); // Get Active Courses and Subject 
-    
+    Route::get('/payments', [PaymentController::class, 'myPayments']); // Listing out all payments
 });
 
 /*
@@ -54,7 +54,6 @@ Route::prefix('students')->middleware(['auth:sanctum', 'auth:student'])->group(f
 | Staff Registration & Verification
 |--------------------------------------------------------------------------
 */
-
 Route::prefix('staffs')->group(function () {
 
     // Registration (Admin only — enforced in controller)
@@ -83,7 +82,6 @@ Route::prefix('staffs')->group(function () {
 | Guardian Registration & Verification
 |--------------------------------------------------------------------------
 */
-
 Route::prefix('guardians')->group(function () {
     Route::post('/register', [GuardianController::class, 'store']);
     Route::post('/verify-email', [GuardianController::class, 'verifyEmail']);

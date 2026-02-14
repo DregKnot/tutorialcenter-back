@@ -173,13 +173,11 @@ class PaymentController extends Controller
     }
 
     // Student: View my payments
-    public function myPayments()
+    public function myPayments(Request $request)
     {
         try {
-
-            $payments = Payment::where('student_id', auth()->id())
-                ->latest()
-                ->get();
+            $studentId = $request->user()->id;
+            $payments = Payment::where('student_id', $studentId)->latest()->get();
 
             return response()->json([
                 'payments' => $payments,
