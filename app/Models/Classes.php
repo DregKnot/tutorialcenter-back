@@ -23,6 +23,13 @@ class Classes extends Model
         'staffs' => 'array',
     ];
 
+        public function staffs()
+    {
+        return $this->belongsToMany(Staff::class, 'class_staff')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
     public function schedules()
     {
         return $this->hasMany(ClassSchedule::class, 'class');

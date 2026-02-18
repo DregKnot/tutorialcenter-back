@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,14 +12,39 @@ return new class extends Migration
     {
         Schema::disableForeignKeyConstraints();
 
+        // Schema::create('class_schedules', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->bigInteger('class');
+        //     $table->foreign('class')->references('id')->on('classes');
+        //     $table->enum('day_of_week', ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"]);
+        //     $table->time('start_time');
+        //     $table->time('end_time');
+        //     $table->softDeletes()->comment('Use Laravel softDelete module');
+        //     $table->timestamps();
+        // });
+
+
         Schema::create('class_schedules', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('class');
-            $table->foreign('class')->references('id')->on('classes');
-            $table->enum('day_of_week', ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"]);
+
+            $table->foreignId('class_id')
+                ->constrained('classes')
+                ->cascadeOnDelete();
+
+            $table->enum('day_of_week', [
+                'sunday',
+                'monday',
+                'tuesday',
+                'wednesday',
+                'thursday',
+                'friday',
+                'saturday'
+            ])->index();
+
             $table->time('start_time');
             $table->time('end_time');
-            $table->softDeletes()->comment('Use Laravel softDelete module');
+
+            $table->softDeletes();
             $table->timestamps();
         });
 
