@@ -10,7 +10,7 @@ class ClassSession extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'class',
+        'class_id',
         'class_schedule',
         'session_date',
         'starts_at',
