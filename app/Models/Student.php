@@ -26,7 +26,6 @@ class Student extends Model
         'location',
         'address',
         'department',
-        // 'guardians',
     ];
 
     protected $hidden = [

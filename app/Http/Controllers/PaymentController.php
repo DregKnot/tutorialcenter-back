@@ -21,14 +21,14 @@ class PaymentController extends Controller
                 'status' => 'required|in:pending,successful,failed,cancelled,refunded',
                 'gateway_reference' => 'nullable|string|unique:payments,gateway_reference',
                 'meta' => 'nullable|array',
-                'paid_at' => 'nullable'
+                'paid_at' => 'nullable|date',
             ]);
 
             $payment = Payment::create($validated);
 
             return response()->json([
                 'message' => 'Payment created successfully.',
-                'data' => $payment,
+                'payment' => $payment,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
