@@ -219,7 +219,7 @@ class CourseController extends Controller
         $validator = Validator::make($request->all(), [
             'student_id' => 'required|exists:students,id',
             'course_id' => 'required|exists:courses,id',
-            'billing_cycle' => 'required|in:monthly,quarterly,semi-annual,annual',
+            'billing_cycle' => 'required|in:monthly,quarterly,semi_annual,annual',
         ]);
 
         if ($validator->fails()) {
@@ -257,7 +257,7 @@ class CourseController extends Controller
             $months = match ($request->billing_cycle) {
                 'monthly' => 1,
                 'quarterly' => 3,
-                'semi-annual' => 6,
+                'semi_annual' => 6,
                 'annual' => 12,
             };
 
