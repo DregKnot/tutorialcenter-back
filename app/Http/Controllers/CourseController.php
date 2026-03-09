@@ -325,7 +325,7 @@ class CourseController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Active paid courses retrieved successfully.',
-                'data' => $mergedCourses,
+                'courses' => $mergedCourses,
             ]);
         } catch (\Throwable $e) {
             return response()->json([
