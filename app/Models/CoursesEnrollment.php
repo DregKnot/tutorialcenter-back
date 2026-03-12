@@ -20,8 +20,8 @@ class CoursesEnrollment extends Model
 
     protected $casts = [
         'start_date' => 'datetime',
-        'end_date'   => 'datetime',
-        'cost'       => 'decimal:2',
+        'end_date' => 'datetime',
+        'cost' => 'decimal:2',
     ];
 
     /*
@@ -41,12 +41,16 @@ class CoursesEnrollment extends Model
     }
 
     public function subjects()
-{
-    return $this->hasMany(SubjectsEnrollment::class, 'course_enrollment_id');
-}
+    {
+        return $this->hasMany(SubjectsEnrollment::class, 'course_enrollment_id');
+    }
 
     public function payments()
     {
         return $this->hasMany(Payment::class, 'course_enrollment_id');
     }
+    // public function payments()
+    // {
+    //     return $this->hasMany(Payment::class, 'course_enrollment_id');
+    // }
 }

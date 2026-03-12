@@ -48,19 +48,19 @@ class Student extends Model
     // Each student can have many course enrollments
     public function courseEnrollments()
     {
-        return $this->hasMany(CoursesEnrollment::class, 'student');
+        return $this->hasMany(CoursesEnrollment::class, 'student_id');
     }
 
     // Each student can have many subject enrollments
     public function subjectEnrollments()
     {
-        return $this->hasMany(SubjectsEnrollment::class, 'student');
+        return $this->hasMany(SubjectsEnrollment::class, 'student_id');
     }
 
     // Each student can have many payments
     public function payments()
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasMany(Payment::class, 'student_id');
     }
 
     // Each student can have many attendances

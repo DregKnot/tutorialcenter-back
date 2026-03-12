@@ -46,35 +46,10 @@ Route::prefix('students')->group(function () {
 Route::prefix('students')->middleware(['auth:sanctum', 'auth:student'])->group(function () {
     Route::get('/courses', [CourseController::class, 'getActiveCourses']); // Get Active Courses and Subject 
     Route::get('/payments', [PaymentController::class, 'myPayments']); // Listing out all payments
-    Route::get('/schedule', [ClassesController::class, 'studentSchedule']); // Get student schedule (classes and sessions)
+    Route::get('/schedule', [ClassesController::class, 'index']); // Get student schedule (classes and sessions)
 });
 
-/*
-|--------------------------------------------------------------------------
-| Staff Registration & Verification
-|--------------------------------------------------------------------------
-*/
-Route::prefix('staffs')->group(function () {
-    // Login (restricted until verified)
-    Route::post('/login', [StaffController::class, 'login']);
 
-    // // Registration (Admin only — enforced in controller)
-    // Route::post('/register', [StaffController::class, 'store']);
-
-    // Email verification
-    Route::get('/verify-email', [StaffController::class, 'verifyEmail']);
-    Route::post('/resend-email-verification', [StaffController::class, 'resendEmailVerification']);
-
-    // Phone OTP verification
-    Route::post('/verify-phone', [StaffController::class, 'verifyPhoneOtp']);
-    Route::post('/resend-phone-otp', [StaffController::class, 'resendPhoneOtp']);
-
-    Route::middleware('auth:staff')->group(function () {
-        // Logout
-        Route::post('/logout', [StaffController::class, 'logout']);
-    });
-
-});
 
 /*
 |--------------------------------------------------------------------------
@@ -89,6 +64,30 @@ Route::prefix('guardians')->group(function () {
     Route::post('/resend-phone-otp', [GuardianController::class, 'resendPhoneOtp']);
 
     Route::post('/resend-email', [GuardianController::class, 'resendEmailVerification']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Staff Registration Verification
+|--------------------------------------------------------------------------
+*/
+Route::prefix('staffs')->group(function () {
+    // Login (restricted until verified)
+    Route::post('/login', [StaffController::class, 'login']);
+
+    // Email verification
+    Route::get('/verify-email', [StaffController::class, 'verifyEmail']);
+    Route::post('/resend-email-verification', [StaffController::class, 'resendEmailVerification']);
+
+    // Phone OTP verification
+    Route::post('/verify-phone', [StaffController::class, 'verifyPhoneOtp']);
+    Route::post('/resend-phone-otp', [StaffController::class, 'resendPhoneOtp']);
+
+    Route::middleware('auth:staff')->group(function () {
+        // Logout
+        Route::post('/logout', [StaffController::class, 'logout']);
+    });
+
 });
 
 /*
@@ -113,39 +112,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'auth:staff', 'staff.role:ad
 
     // Classes Management
     Route::prefix('classes')->group(function () {
-        // Create class schedule and sessions
-        Route::post('/schedule/sessions', [ClassesController::class, 'createScheduleAndSessions']);
-
-        // Get all classes
-        Route::get('/', [ClassesController::class, 'index']);
-
-        // Create class
+        // Create class, class schedule, assign staff to class and class sessions
         Route::post('/create', [ClassesController::class, 'store']);
-
-        // Get single class
-        Route::get('/{id}', [ClassesController::class, 'show']);
-
-        // Update class
-        Route::put('/{id}', [ClassesController::class, 'update']);
-        Route::patch('/{id}', [ClassesController::class, 'update']);
-
-        // Soft delete
-        Route::delete('/{id}', [ClassesController::class, 'destroy']);
-
-        // Restore soft deleted class
-        Route::post('/{id}/restore', [ClassesController::class, 'restore']);
-
-        // Permanently delete
-        Route::delete('/{id}/force-delete', [ClassesController::class, 'forceDelete']);
-
-        // Update status
-        Route::patch('/{id}/status', [ClassesController::class, 'updateStatus']);
-
-        // Attach staff
-        Route::post('/{id}/staff', [ClassesController::class, 'attachStaff']);
-
-        // Detach staff
-        Route::delete('/{classId}/staff/{staffId}', [ClassesController::class, 'detachStaff']);
     });
 
 });
