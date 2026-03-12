@@ -28,7 +28,7 @@ class ClassesController extends Controller
         $validator = Validator::make($request->all(), [
 
             'subject_id' => 'required|exists:subjects,id',
-            'title' => 'nullable|string|max:255',
+            'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'required|in:active,inactive',
 
