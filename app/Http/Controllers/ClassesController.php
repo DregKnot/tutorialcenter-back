@@ -38,6 +38,8 @@ class ClassesController extends Controller
 
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
+            
+            'class_link' => 'required|url',
 
             'schedules' => 'required|array|min:1',
 
@@ -175,7 +177,8 @@ class ClassesController extends Controller
                             [
                                 'starts_at' => $scheduleData['start_time'],
                                 'ends_at' => $endTime,
-                                'class_link' => "https://meet.google.com/" . Str::random(10),
+                                'class_link' => $request->class_link,
+                                // 'class_link' => "https://meet.google.com/" . Str::random(10),
                                 'status' => 'scheduled'
                             ]
                         );
