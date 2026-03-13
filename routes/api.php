@@ -94,8 +94,9 @@ Route::prefix('staffs')->group(function () {
  * Admin Only Protected Routes (enforced in controller)
  */
 Route::prefix('admin')->middleware(['auth:sanctum', 'auth:staff', 'staff.role:admin'])->group(function () {
-    // Registration 
-    Route::post('/register', [StaffController::class, 'store']);
+     
+    Route::post('/register', [StaffController::class, 'store']); // Registration a new Staff
+    Route::get('/staffs/all', [StaffController::class, 'index']); // List all staff members 
 
     // Course Management
     Route::post('/courses', [CourseController::class, 'store']);
