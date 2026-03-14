@@ -408,6 +408,28 @@ class ClassesController extends Controller
         ]);
     }
 
+    /**
+     * Get classes schdule for all subjects
+     */
+    public function allClassesSchedule(Request $request){
+        try {
+            $classes = Classes::with(['subject', 'staffs', 'schedules.sessions'])
+                ->whereHas('subject', fn($q) => $q->where('status', 'active'))
+                ->where('status', 'active')
+                ->get();
+
+            return response()->json([
+                'classes' => $classes
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to fetch classes schedule',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
 
 
 

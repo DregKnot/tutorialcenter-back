@@ -113,8 +113,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'auth:staff', 'staff.role:ad
 
     // Classes Management
     Route::prefix('classes')->group(function () {
-        // Create class, class schedule, assign staff to class and class sessions
-        Route::post('/create', [ClassesController::class, 'store']);
+        Route::post('/create', [ClassesController::class, 'store']); // Create class, class schedule, assign staff to class and class sessions
+        Route::get('/all', [ClassesController::class, 'allClassesSchedule']); // List all classes
     });
 
 });
