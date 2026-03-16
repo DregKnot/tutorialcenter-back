@@ -94,22 +94,28 @@ Route::prefix('staffs')->group(function () {
  * Admin Only Protected Routes (enforced in controller)
  */
 Route::prefix('admin')->middleware(['auth:sanctum', 'auth:staff', 'staff.role:admin'])->group(function () {
-     
-    Route::post('/register', [StaffController::class, 'store']); // Registration a new Staff
-    Route::get('/staffs/all', [StaffController::class, 'index']); // List all staff members 
+    //Staffs Management
+    Route::prefix('staffs')->group(function () {
+        Route::get('/all', [StaffController::class, 'index']); // List all staff members 
+        Route::post('/register', [StaffController::class, 'store']); // Registration a new Staff
+    }); 
 
     // Course Management
-    Route::post('/courses', [CourseController::class, 'store']);
-    Route::put('/courses/update/{id}', [CourseController::class, 'update']);
-    Route::delete('/courses/destroy/{id}', [CourseController::class, 'destroy']);
-    Route::post('/courses/restore/{id}', [CourseController::class, 'restore']);
+    Route::prefix('courses')->group(function () {
+        Route::post('/', [CourseController::class, 'store']);
+        Route::put('/update/{id}', [CourseController::class, 'update']);
+        Route::delete('/destroy/{id}', [CourseController::class, 'destroy']);
+        Route::post('/restore/{id}', [CourseController::class, 'restore']);
+    });
 
     // Subject Management
-    Route::get('/subjects/all', [SubjectController::class, 'allSubjects']); // View all subjects (including inactive)
-    Route::post('/subjects', [SubjectController::class, 'store']); // Create new subject
-    Route::put('/subjects/update/{id}', [SubjectController::class, 'update']); // Update subject
-    Route::delete('/subjects/destroy/{id}', [SubjectController::class, 'destroy']); // Soft delete subject
-    Route::post('/subjects/restore/{id}', [SubjectController::class, 'restore']); // Restore soft-deleted subject
+    Route::prefix('subjects')->group(function () {
+        Route::get('/all', [SubjectController::class, 'allSubjects']); // View all subjects (including inactive)
+        Route::post('/', [SubjectController::class, 'store']); // Create new subject
+        Route::put('/update/{id}', [SubjectController::class, 'update']); // Update subject
+        Route::delete('/destroy/{id}', [SubjectController::class, 'destroy']); // Soft delete subject
+        Route::post('/restore/{id}', [SubjectController::class, 'restore']); // Restore soft-deleted subject
+    });
 
     // Classes Management
     Route::prefix('classes')->group(function () {

@@ -23,7 +23,7 @@ class ClassesController extends Controller
 
     /**
      * Create a new class
-     */
+    **/
     public function store(Request $request){
         $validator = Validator::make($request->all(), [
 
@@ -218,7 +218,7 @@ class ClassesController extends Controller
 
     /**
      * Get student schedule with basic session info
-     */
+    **/
     public function studentCalenderSchedule(Request $request){
         $student = $request->user();
 
@@ -286,7 +286,7 @@ class ClassesController extends Controller
 
     /**
      * Get student schedule with attendance status
-     */
+    **/
     public function studentClassSchedule(Request $request){
         $student = $request->user();
 
@@ -410,7 +410,7 @@ class ClassesController extends Controller
 
     /**
      * Get classes schdule for all subjects
-     */
+    **/
     public function allClassesSchedule(Request $request){
         try {
             $classes = Classes::with(['subject', 'staffs', 'schedules.sessions'])
@@ -429,6 +429,35 @@ class ClassesController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * (Public) View a specific class schedule with sessions
+     * - Used for students to view class details and join links 
+    **/
+    public function viewClassSchedule(int $classId): JsonResponse
+    {
+        try {
+            $class = Classes::with(['subject', 'staffs', 'schedules.sessions'])->where('id', $classId)->where('status', 'active')->firstOrFail();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Class schedule fetched successfully',
+                'class' => $class,
+            ], 200);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch class schedule',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /**
+     * (Admin) Edit class schedule (reschedule sessions and update class link)
+    **/
+
 
 
 
