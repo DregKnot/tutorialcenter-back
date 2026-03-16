@@ -98,6 +98,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'auth:staff', 'staff.role:ad
     Route::prefix('staffs')->group(function () {
         Route::get('/all', [StaffController::class, 'index']); // List all staff members 
         Route::post('/register', [StaffController::class, 'store']); // Registration a new Staff
+        Route::get('/{id}', [StaffController::class, 'show']); // View a specific staff member's details
         Route::delete('/destroy/{id}', [StaffController::class, 'destroy']); // Soft delete a staff member
         Route::post('/restore/{id}', [StaffController::class, 'restore']); // Restore a soft-deleted staff member
         Route::put('/update/{id}', [StaffController::class, 'update']); // Update staff member details

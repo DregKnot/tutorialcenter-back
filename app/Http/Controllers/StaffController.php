@@ -165,8 +165,14 @@ class StaffController extends Controller
 
         try {
             // 3. Upload profile picture
-            $picturePath = $request->file('profile_picture')
-                ->store('staff_profile_pictures', 'public');
+            if ($request->hasFile('profile_picture')) {
+                $picturePath = $request->file('profile_picture')
+                    ->store('staff_profile_pictures', 'public');
+            } else {
+                $picturePath = 'default-avatar.png';
+            }
+            // $picturePath = $request->file('profile_picture')
+            //     ->store('staff_profile_pictures', 'public');
 
             // 4. Generate staff ID
             $staffCount = Staff::withTrashed()->count() + 1;
@@ -550,6 +556,26 @@ class StaffController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'message' => 'Failed to update staff details.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /*
+    * (Admin) show staff profile details
+    */
+    public function show($id)
+    {
+        try {
+            $staff = Staff::findOrFail($id);
+
+            return response()->json([
+                'message' => 'Profile retrieved successfully.',
+                'staff' => $staff,
+            ], 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve profile.',
                 'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
