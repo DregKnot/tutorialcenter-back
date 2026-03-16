@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\EmailVerification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Services\EmailVerificationService;
 use Illuminate\Support\Facades\RateLimiter;
@@ -39,7 +40,8 @@ class StaffController extends Controller
     /**
      * Staff login.
      */
-    public function login(Request $request){
+    public function login(Request $request)
+    {
         try {
             // 1. Validate input
             $request->validate([
@@ -108,7 +110,7 @@ class StaffController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Staff registration (Admin only - enforced in controller)
      */
@@ -434,11 +436,122 @@ class StaffController extends Controller
     /**
      * Staff logout.
      */
-    public function logout(Request $request){
+    public function logout(Request $request)
+    {
         $request->user()->tokens()->delete();
 
         return response()->json([
             'message' => 'Logged out successfully.',
         ]);
+    }
+
+    /*
+     * (Admin) Delete staff using soft delete
+     */
+    public function destroy($id)
+    {
+        try {
+            $staff = Staff::findOrFail($id);
+            if ($staff->role === 'admin') {
+                return response()->json([
+                    'message' => 'Cannot suspend an admin staff.',
+                ], 403);
+            }
+            $staff->delete();
+
+            return response()->json([
+                'message' => 'Staff suspended successfully.',
+                'staff' => $staff,
+            ], 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to suspend staff.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /*
+     * (Admin) Restore staff using soft delete
+     */
+    public function restore($id)
+    {
+        try {
+            $staff = Staff::withTrashed()->findOrFail($id);
+            $staff->restore();
+
+            return response()->json([
+                'message' => 'Staff restored successfully.',
+                'staff' => $staff,
+            ], 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to restore staff.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /*
+     * (Admin) Edit staff details
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $staff = Staff::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'firstname' => 'sometimes|required|string|max:50',
+                'middlename' => 'sometimes|string|max:50',
+                'surname' => 'sometimes|required|string|max:50',
+
+                'email' => 'sometimes|required|email|unique:staffs,email,' . $staff->id,
+                'tel' => [
+                    'sometimes',
+                    'required',
+                    'string',
+                    'unique:staffs,tel,' . $staff->id,
+                    'regex:/^(\+234|234|0)(70|80|81|90|91)\d{8}$/',
+                ],
+                'gender' => 'sometimes|in:male,female,others',
+                'profile_picture' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+                'date_of_birth' => 'sometimes|date|before:today',
+
+                'location' => 'sometimes|string',
+                'address' => 'sometimes|string',
+
+                'role' => 'sometimes|in:admin,tutor,advisor',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+            
+            if ($request->hasFile('profile_picture')) {
+                // If staff had an existing picture, remove it
+                if ($staff->profile_picture) {
+                    Storage::disk('public')->delete($staff->profile_picture);
+                }
+
+                $picturePath = $request->file('profile_picture')
+                    ->store('staff_profile_pictures', 'public');
+                $staff->profile_picture = $picturePath;
+            }
+
+            $staff->fill($request->except('profile_picture'));
+            $staff->save();
+
+            return response()->json([
+                'message' => 'Staff details updated successfully.',
+                'staff' => $staff,
+            ], 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to update staff details.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
     }
 }
