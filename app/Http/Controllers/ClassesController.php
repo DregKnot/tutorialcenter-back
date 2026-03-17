@@ -399,17 +399,116 @@ class ClassesController extends Controller
         $attendance = ClassAttendance::where('student_id', $student->id)
             ->pluck('status', 'class_session_id');
 
-        return response()->json([
-            'next_class' => $nextClass,
-            'today_classes' => $todayClasses,
-            'week_schedule' => $weekSchedule,
-            'upcoming_sessions' => $upcomingSessions,
-            'attendance' => $attendance
-        ]);
     }
 
     /**
-     * Get classes schdule for all subjects
+     * (tutor) Get tutor schedule with attendance status
+    **/
+    public function tutorClassesSchedule(Request $request){
+        try {
+            $staff = $request->user();
+    
+            /*
+            |--------------------------------------------------------------------------
+            | 1. Get Classes Assigned to Staff
+            |--------------------------------------------------------------------------
+            */
+    
+            $classIds = ClassStaff::where('staff_id', $staff->id)
+                ->pluck('class_id');
+    
+            if ($classIds->isEmpty()) {
+                return response()->json([
+                    'next_class' => null,
+                    'today_classes' => [],
+                    'week_schedule' => [],
+                    'upcoming_sessions' => []
+                ]);
+            }
+    
+            /*
+            |--------------------------------------------------------------------------
+            | 2. Base Session Query
+            |--------------------------------------------------------------------------
+            */
+    
+            $sessionQuery = ClassSession::with([
+                'class.subject',
+                'class.staffs'
+            ])
+            ->whereIn('class_id', $classIds)
+            ->whereHas('class', function ($q) {
+                $q->where('status', 'active');
+            });
+    
+            /*
+            |--------------------------------------------------------------------------
+            | 3. Next Class
+            |--------------------------------------------------------------------------
+            */
+    
+            $nextClass = (clone $sessionQuery)
+                ->whereDate('session_date', '>=', now())
+                ->orderBy('session_date')
+                ->orderBy('starts_at')
+                ->first();
+    
+            /*
+            |--------------------------------------------------------------------------
+            | 4. Today's Classes
+            |--------------------------------------------------------------------------
+            */
+    
+            $todayClasses = (clone $sessionQuery)
+                ->whereDate('session_date', today())
+                ->orderBy('starts_at')
+                ->get();
+    
+            /*
+            |--------------------------------------------------------------------------
+            | 5. Weekly Schedule
+            |--------------------------------------------------------------------------
+            */
+    
+            $weekSchedule = (clone $sessionQuery)
+                ->whereBetween('session_date', [
+                    now()->startOfWeek(),
+                    now()->endOfWeek()
+                ])
+                ->orderBy('session_date')
+                ->orderBy('starts_at')
+                ->get()
+                ->groupBy('session_date');
+    
+            /*
+            |--------------------------------------------------------------------------
+            | 6. Upcoming Sessions
+            |--------------------------------------------------------------------------
+            */
+    
+            $upcomingSessions = (clone $sessionQuery)
+                ->whereDate('session_date', '>=', now())
+                ->orderBy('session_date')
+                ->orderBy('starts_at')
+                ->limit(10)
+                ->get();
+    
+            return response()->json([
+                'next_class' => $nextClass,
+                'today_classes' => $todayClasses,
+                'week_schedule' => $weekSchedule,
+                'upcoming_sessions' => $upcomingSessions
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to fetch tutor schedule',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /**
+     * (admin) Get classes schdule for all subjects 
     **/
     public function allClassesSchedule(Request $request){
         try {
