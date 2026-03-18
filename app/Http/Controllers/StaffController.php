@@ -24,7 +24,7 @@ class StaffController extends Controller
     public function index()
     {
         try {
-            $staffs = Staff::get();
+            $staffs = Staff::withTrashed()->get();
             return response()->json([
                 'message' => 'Staff retrieved successfully.',
                 'staffs' => $staffs,
@@ -567,7 +567,7 @@ class StaffController extends Controller
     public function show($id)
     {
         try {
-            $staff = Staff::findOrFail($id);
+            $staff = Staff::withTrashed()->findOrFail($id);
 
             return response()->json([
                 'message' => 'Profile retrieved successfully.',
