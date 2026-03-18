@@ -580,4 +580,28 @@ class StaffController extends Controller
             ], 500);
         }
     }
+
+    /*
+     * (Admin) List active staffs base on the personal access token table
+     */
+    public function activeStaffs() {
+        try {
+            $activeStaffIds = DB::table('personal_access_tokens')
+                ->where('name', 'staff-token')
+                ->pluck('tokenable_id')
+                ->unique();
+
+            $activeStaffs = Staff::whereIn('id', $activeStaffIds)->get();
+
+            return response()->json([
+                'message' => 'Active staffs retrieved successfully.',
+                'staffs' => $activeStaffs,
+            ], 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve active staffs.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
 }
