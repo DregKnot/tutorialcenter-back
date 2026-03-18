@@ -6,18 +6,17 @@ use App\Models\ClassAttendance;
 use App\Models\ClassSession;
 use App\Models\Course;
 use App\Models\CoursesEnrollment;
+use Validator;
+use Carbon\Carbon;
 use App\Models\Holiday;
 use App\Models\Subject;
-use Carbon\Carbon;
-use Illuminate\Support\Str;
-use Validator;
 use App\Models\Classes;
 use App\Models\ClassStaff;
-use App\Models\ClassSchedule;
-use App\Models\SubjectsEnrollment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Models\ClassSchedule;
 use Illuminate\Http\JsonResponse;
+use App\Models\SubjectsEnrollment;
+use Illuminate\Support\Facades\DB;
 
 class ClassesController extends Controller
 {
@@ -733,7 +732,7 @@ class ClassesController extends Controller
 
 
 
-    
+
 
 
     // /**
