@@ -306,7 +306,8 @@ class ClassesController extends Controller
                     'next_class' => null,
                     'today_classes' => [],
                     'week_schedule' => [],
-                    'upcoming_sessions' => []
+                    'upcoming_sessions' => [],
+                    'older_sessions' => [],
                 ]);
             }
     
@@ -359,17 +360,24 @@ class ClassesController extends Controller
             |--------------------------------------------------------------------------
             */
             $upcomingSessions = (clone $sessionQuery)->whereDate('session_date', '>=', now())->orderBy('session_date')->orderBy('starts_at')->limit(10)->get();
+
+            /*
+            |--------------------------------------------------------------------------
+            | 8. Older Sessions
+            |--------------------------------------------------------------------------
+            */
+            $olderSessions = (clone $sessionQuery)->whereDate('session_date', '<', now())->orderBy('session_date', 'desc')->orderBy('starts_at', 'desc')->limit(10)->get();
     
             /*
             |--------------------------------------------------------------------------
-            | 8. Attendance Status
+            | 9. Attendance Status
             |--------------------------------------------------------------------------
             */
             $attendance = ClassAttendance::where('student_id', $student->id)->pluck('status', 'class_session_id');
 
             /*
             |--------------------------------------------------------------------------
-            | 9. Return Response
+            | 10. Return Response
             |--------------------------------------------------------------------------
             */
             return response()->json([
@@ -377,6 +385,8 @@ class ClassesController extends Controller
                 'today_classes' => $todayClasses,
                 'week_schedule' => $weekSchedule,
                 'upcoming_sessions' => $upcomingSessions,
+                'older_sessions' => $olderSessions,
+                'attendance' => $attendance,
             ]);
             
             /*
@@ -723,23 +733,7 @@ class ClassesController extends Controller
 
 
 
-
-    // /**
-    //  * Display paginated classes
-    //  */
-    // public function index(Request $request): JsonResponse
-    // {
-    //     $classes = Classes::with(['staffs', 'schedules', 'sessions'])
-    //         ->when($request->status, fn($q) => $q->where('status', $request->status))
-    //         ->latest()
-    //         ->paginate(10);
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => $classes,
-    //     ]);
-    // }
-
+    
 
 
     // /**
