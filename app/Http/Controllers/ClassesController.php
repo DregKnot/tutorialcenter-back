@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ClassAttendance;
 use App\Models\ClassSession;
 use App\Models\Course;
+use App\Models\CoursesEnrollment;
 use App\Models\Holiday;
 use App\Models\Subject;
 use Carbon\Carbon;
@@ -508,6 +509,152 @@ class ClassesController extends Controller
     }
 
     /**
+     * (advisor) Get advisor schedule with advisees' classes
+    **/
+    public function advisorClassSchedule(Request $request){
+        try {
+            $staff = $request->user();
+
+            /*
+            |--------------------------------------------------------------------------
+            | 1. Get Advisees (Students)
+            |--------------------------------------------------------------------------
+            */
+
+            $adviseeIds = $staff->advisees()->pluck('students.id');
+
+            if ($adviseeIds->isEmpty()) {
+                return response()->json([
+                    'next_class' => null,
+                    'today_classes' => [],
+                    'week_schedule' => [],
+                    'upcoming_sessions' => []
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | 2. Get Active Course Enrollments for Advisees
+            |--------------------------------------------------------------------------
+            */
+
+            $activeEnrollments = CoursesEnrollment::whereIn('student_id', $adviseeIds)
+                ->where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->whereHas('payments', function ($query) {
+                    $query->where('status', 'successful');
+                })
+                ->pluck('id');
+
+            if ($activeEnrollments->isEmpty()) {
+                return response()->json([
+                    'next_class' => null,
+                    'today_classes' => [],
+                    'week_schedule' => [],
+                    'upcoming_sessions' => []
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | 3. Get Registered Subjects
+            |--------------------------------------------------------------------------
+            */
+
+            $subjectIds = SubjectsEnrollment::whereIn('course_enrollment_id', $activeEnrollments)
+                ->pluck('subject_id');
+
+            if ($subjectIds->isEmpty()) {
+                return response()->json([
+                    'next_class' => null,
+                    'today_classes' => [],
+                    'week_schedule' => [],
+                    'upcoming_sessions' => []
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | 4. Base Session Query
+            |--------------------------------------------------------------------------
+            */
+
+            $sessionQuery = ClassSession::with([
+                'class.subject',
+                'class.staffs'
+            ])
+            ->whereHas('class', function ($q) use ($subjectIds) {
+                $q->whereIn('subject_id', $subjectIds)
+                ->where('status', 'active');
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | 5. Next Class
+            |--------------------------------------------------------------------------
+            */
+
+            $nextClass = (clone $sessionQuery)
+                ->whereDate('session_date', '>=', now())
+                ->orderBy('session_date')
+                ->orderBy('starts_at')
+                ->first();
+
+            /*
+            |--------------------------------------------------------------------------
+            | 6. Today's Classes
+            |--------------------------------------------------------------------------
+            */
+
+            $todayClasses = (clone $sessionQuery)
+                ->whereDate('session_date', today())
+                ->orderBy('starts_at')
+                ->get();
+
+            /*
+            |--------------------------------------------------------------------------
+            | 7. Weekly Schedule
+            |--------------------------------------------------------------------------
+            */
+
+            $weekSchedule = (clone $sessionQuery)
+                ->whereBetween('session_date', [
+                    now()->startOfWeek(),
+                    now()->endOfWeek()
+                ])
+                ->orderBy('session_date')
+                ->orderBy('starts_at')
+                ->get()
+                ->groupBy('session_date');
+
+            /*
+            |--------------------------------------------------------------------------
+            | 8. Upcoming Sessions
+            |--------------------------------------------------------------------------
+            */
+
+            $upcomingSessions = (clone $sessionQuery)
+                ->whereDate('session_date', '>=', now())
+                ->orderBy('session_date')
+                ->orderBy('starts_at')
+                ->limit(10)
+                ->get();
+
+            return response()->json([
+                'next_class' => $nextClass,
+                'today_classes' => $todayClasses,
+                'week_schedule' => $weekSchedule,
+                'upcoming_sessions' => $upcomingSessions
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to fetch advisor schedule',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /**
      * (admin) Get classes schdule for all subjects 
     **/
     public function allClassesSchedule(Request $request){
@@ -552,6 +699,8 @@ class ClassesController extends Controller
             ], 500);
         }
     }
+
+
 
     /**
      * (Admin) Edit class schedule (reschedule sessions and update class link)

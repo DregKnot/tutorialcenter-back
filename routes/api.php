@@ -138,6 +138,15 @@ Route::prefix('tutor')->middleware(['auth:sanctum', 'auth:staff', 'staff.role:tu
     });
 });
 
+/*
+ * Tutor Only Protected Routes (enforced in controller)
+ */
+Route::prefix('advisor')->middleware(['auth:sanctum', 'auth:staff', 'staff.role:advisor'])->group(function () {
+    Route::prefix('classes')->group(function () {
+        Route::get('/schedule', [ClassesController::class, 'advisorClassesSchedule']); // Get advisor schedule with attendance status     
+    });
+});
+
 
 
 
