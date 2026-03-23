@@ -22,7 +22,7 @@ class ClassesController extends Controller
 {
 
     /**
-     * Create a new class
+     * (admin) create a new class
     **/
     public function store(Request $request){
         $validator = Validator::make($request->all(), [
@@ -217,7 +217,7 @@ class ClassesController extends Controller
     }
 
     /**
-     * Get student schedule with basic session info
+     * (student) Get student schedule with basic session info
     **/
     public function studentCalenderSchedule(Request $request){
         $student = $request->user();
@@ -285,7 +285,7 @@ class ClassesController extends Controller
     }
 
     /**
-     * Get student schedule with attendance status
+     * (student) Get student schedule with attendance status
     **/
     public function studentClassSchedule(Request $request){
         try {
@@ -404,6 +404,7 @@ class ClassesController extends Controller
         }
 
     }
+
 
     /**
      * (tutor) Get tutor schedule with attendance status
@@ -708,17 +709,6 @@ class ClassesController extends Controller
     /**
      * (Admin) Edit class schedule (reschedule sessions and update class link)
     **/
-
-
-
-
-
-
-
-
-
-
-
 
 
 
