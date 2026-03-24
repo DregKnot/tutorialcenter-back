@@ -507,132 +507,127 @@ class CourseController extends Controller
             ], 500);
         }
     }
-    public function disenrollCoursessssssssssssss(Request $request, int $courseId)
+    
+    /**
+     * ADMIN: Get all courses (including inactive and soft-deleted)
+     */
+    public function getDisenrolledCourses(Request $request)
     {
         try {
-            $student = $request->user();
 
             /*
             |--------------------------------------------------------------------------
-            | 1. Validate Active Enrollment
+            | 1. Fetch Soft Deleted (Disenrolled) Enrollments
             |--------------------------------------------------------------------------
             */
 
-            $enrollment = CoursesEnrollment::where('student_id', $student->id)
-                ->where('course_id', $courseId)
-                ->where('status', 'active')
-                ->where('end_date', '>=', now())
-                ->whereHas('payments', function ($q) {
-                    $q->where('status', 'successful');
-                })
-                ->first();
-
-            if (!$enrollment) {
-                return response()->json([
-                    'message' => 'No active enrollment found for this course'
-                ], 404);
-            }
-
-            DB::beginTransaction();
-
-            /*
-            |--------------------------------------------------------------------------
-            | 2. Cancel Enrollment
-            |--------------------------------------------------------------------------
-            */
-
-            $enrollment->update([
-                'status' => 'cancelled'
-            ]);
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | 3. Get Related Subjects
-            |--------------------------------------------------------------------------
-            */
-
-            $subjectIds = Subject::where('course_id', $courseId)->pluck('id');
-
-            /*
-            |--------------------------------------------------------------------------
-            | 4. Remove Subject Enrollments
-            |--------------------------------------------------------------------------
-            */
-
-            SubjectsEnrollment::where('student_id', $student->id)
-                ->whereIn('subject_id', $subjectIds)
-                ->where('course_enrollment_id', $enrollment->id)
-                ->delete();
-
-            /*
-            |--------------------------------------------------------------------------
-            | 5. Get Classes for Subjects
-            |--------------------------------------------------------------------------
-            */
-
-            $classIds = Classes::whereIn('subject_id', $subjectIds)->pluck('id');
-
-            if ($classIds->isNotEmpty()) {
-
-                /*
-                |--------------------------------------------------------------------------
-                | 6. Get Future Sessions ONLY
-                |--------------------------------------------------------------------------
-                */
-
-                $futureSessions = ClassSession::whereIn('class_id', $classIds)
-                    ->whereDate('session_date', '>=', now())
-                    ->pluck('id');
-
-                if ($futureSessions->isNotEmpty()) {
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | 7. Remove Existing Attendance (future only)
-                    |--------------------------------------------------------------------------
-                    */
-
-                    ClassAttendance::where('student_id', $student->id)
-                        ->whereIn('class_session_id', $futureSessions)
-                        ->delete();
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | 8. Insert "not_marked" placeholders (optional but recommended)
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $attendanceData = [];
-
-                    foreach ($futureSessions as $sessionId) {
-                        $attendanceData[] = [
-                            'student_id' => $student->id,
-                            'class_session_id' => $sessionId,
-                            'status' => 'not_marked',
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
+            $enrollments = CoursesEnrollment::withTrashed()
+                ->with([
+                    'student',
+                    'course',
+                    'payments' => function ($q) {
+                        $q->withTrashed()->orderByDesc('created_at');
+                    },
+                    'subjectsEnrollments' => function ($q) {
+                        $q->withTrashed()->with('subject');
                     }
+                ])
+                ->whereNotNull('deleted_at') // Only disenrolled
+                ->orderByDesc('deleted_at')
+                ->get();
 
-                    // Prevent duplicates using insertOrIgnore
-                    ClassAttendance::insertOrIgnore($attendanceData);
-                }
-            }
-            $enrollment->delete(); // Optional: Soft delete the enrollment record to keep history but exclude from active queries
+            /*
+            |--------------------------------------------------------------------------
+            | 2. Transform Data (Clean API Response)
+            |--------------------------------------------------------------------------
+            */
 
-            DB::commit();
+            $data = $enrollments->map(function ($enrollment) {
+
+                return [
+                    'enrollment_id' => $enrollment->id,
+                    'student' => [
+                        'id' => $enrollment->student?->id,
+                        'name' => trim(
+                            ($enrollment->student?->firstname ?? '') . ' ' .
+                            ($enrollment->student?->surname ?? '')
+                        ),
+                        'email' => $enrollment->student?->email,
+                    ],
+
+                    'course' => [
+                        'id' => $enrollment->course?->id,
+                        'title' => $enrollment->course?->title,
+                    ],
+
+                    'billing_cycle' => $enrollment->billing_cycle,
+                    'start_date' => $enrollment->start_date,
+                    'end_date' => $enrollment->end_date,
+
+                    'disenrolled_at' => $enrollment->deleted_at,
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Subjects (Even if Soft Deleted)
+                    |--------------------------------------------------------------------------
+                    */
+                    'subjects' => $enrollment->subjectsEnrollments->map(function ($se) {
+                        return [
+                            'subject_id' => $se->subject?->id,
+                            'name' => $se->subject?->name,
+                            'deleted_at' => $se->deleted_at
+                        ];
+                    }),
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Payments History
+                    |--------------------------------------------------------------------------
+                    */
+                    'payments' => $enrollment->payments->map(function ($payment) {
+                        return [
+                            'id' => $payment->id,
+                            'amount' => $payment->amount,
+                            'status' => $payment->status,
+                            'method' => $payment->payment_method,
+                            'gateway' => $payment->gateway,
+                            'reference' => $payment->gateway_reference,
+                            'paid_at' => $payment->paid_at,
+                            'created_at' => $payment->created_at,
+                        ];
+                    }),
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Summary (Useful for Admin UI)
+                    |--------------------------------------------------------------------------
+                    */
+                    'summary' => [
+                        'total_paid' => $enrollment->payments
+                            ->where('status', 'successful')
+                            ->sum('amount'),
+
+                        'total_refunded' => $enrollment->payments
+                            ->where('status', 'refunded')
+                            ->sum('amount'),
+
+                        'cancelled_payments' => $enrollment->payments
+                            ->where('status', 'cancelled')
+                            ->count(),
+                    ]
+                ];
+            });
 
             return response()->json([
-                'message' => 'Successfully disenrolled from course and removed from future classes'
-            ], 200);
+                'message' => 'Disenrolled courses retrieved successfully',
+                'count' => $data->count(),
+                'data' => $data
+            ]);
 
         } catch (\Throwable $e) {
 
-            DB::rollBack();
-
             return response()->json([
-                'message' => 'Failed to disenroll from course',
+                'message' => 'Failed to retrieve disenrolled courses',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }

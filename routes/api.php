@@ -112,6 +112,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'auth:staff', 'staff.role:ad
         Route::put('/update/{id}', [CourseController::class, 'update']);
         Route::delete('/destroy/{id}', [CourseController::class, 'destroy']);
         Route::post('/restore/{id}', [CourseController::class, 'restore']);
+        Route::get('/disenrollments', [CourseController::class, 'getDisenrolledCourses']); // List all course disenrollments
     });
 
     // Subject Management
