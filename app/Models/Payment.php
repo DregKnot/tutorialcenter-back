@@ -53,7 +53,7 @@ class Payment extends Model
      */
     public function enrollment()
     {
-        return $this->belongsTo(CoursesEnrollment::class, 'course_enrollment_id');
+        return $this->belongsTo(CoursesEnrollment::class, 'course_enrollment_id')->withTrashed();
     }
 
     /**

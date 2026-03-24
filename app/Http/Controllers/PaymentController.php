@@ -47,11 +47,13 @@ class PaymentController extends Controller
     {        
         try {
             $studentId = $request->user()->id;
-            $payments = Payment::with('enrollment.course')->where('student_id', $studentId)->latest()->get();
+            $payments = Payment::with(['enrollment' => function ($query) {
+                $query->withTrashed()->with('course');
+            }])->where('student_id', $studentId)->latest()->get();
             $paymentsData = $payments->map(function ($payment) {
                 return [
                     ...$payment->toArray(),
-                    'course_title' => $payment->enrollment->course->title ?? null,
+                    'course_title' => optional($payment->enrollment?->course)->title ?? null,
                 ];
             });
             return response()->json([

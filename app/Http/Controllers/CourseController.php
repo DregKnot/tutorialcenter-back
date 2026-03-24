@@ -404,13 +404,25 @@ class CourseController extends Controller
             | We cancel any ongoing or valid payments tied to this enrollment
             */
 
-            Payment::where('student_id', $student->id)
+            // Payment::where('student_id', $student->id)
+            //     ->where('course_enrollment_id', $enrollment->id)
+            //     ->whereIn('status', ['pending', 'successful'])
+            //     ->update([
+            //         'status' => 'cancelled',
+            //         'meta' => DB::raw("json_set(COALESCE(meta, '{}'), '$.cancelled_reason', 'course_disenrollment')")
+            //     ]); // Soft delete payments as well
+
+
+            $paymentQuery = Payment::where('student_id', $student->id)
                 ->where('course_enrollment_id', $enrollment->id)
-                ->whereIn('status', ['pending', 'successful'])
-                ->update([
-                    'status' => 'cancelled',
-                    'meta' => DB::raw("json_set(COALESCE(meta, '{}'), '$.cancelled_reason', 'course_disenrollment')")
-                ]);
+                ->whereIn('status', ['pending', 'successful']);
+
+            $paymentQuery->update([
+                'status' => 'cancelled',
+                'meta' => DB::raw("json_set(COALESCE(meta, '{}'), '$.cancelled_reason', 'course_disenrollment')")
+            ]);
+
+            // $paymentQuery->delete(); // soft delete (if model uses SoftDeletes)
 
             /*
             |--------------------------------------------------------------------------
@@ -490,6 +502,7 @@ class CourseController extends Controller
             ]);
 
             $enrollment->delete(); // Soft delete
+            $paymentQuery->delete(); // soft delete (if model uses SoftDeletes)
 
             DB::commit();
 
@@ -507,14 +520,13 @@ class CourseController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * ADMIN: Get all courses (including inactive and soft-deleted)
      */
     public function getDisenrolledCourses(Request $request)
     {
         try {
-
             /*
             |--------------------------------------------------------------------------
             | 1. Fetch Soft Deleted (Disenrolled) Enrollments
